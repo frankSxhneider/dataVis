@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/player/player.min.css" rel="stylesheet">
+
+    <title>E-Commerce Dashboard</title>
+    <style>
+        body {
+            background-color: #121212;
+            margin: 4px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .title {
+            height: 60px;
+            width: 100%;
+            padding: 10px;
+            font-size: 40px;
+            color: #F5F5F5;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .chart-container-violin,
+        .chart-container-Map,
+        .chart-container-1,
+        .chart-container-0,
+        .chart-container-fullsize {
+            background-color: #262626;
+            box-sizing: border-box;
+            box-shadow: 7px 8px 7px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 10px;
+            margin-bottom: 20px;
+            margin-right: 20px;
+            margin-left: 0;
+        }
+
+        .chart-container-violin {
+            width: 50vw;
+            height: 620px;
+        }
+
+        .chart-container-Map {
+            min-width: 650px;
+            height: 750px;
+            flex: 1;
+            position: relative;
+        }
+
+        .chart-container-0 {
+            margin-left: 5px;
+            width: calc(44vw - 20px);
+            height: 460px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container-1 {
+            margin-left: 5px;
+            width: calc(44vw - 20px);
+            height: 345px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container-fullsize {
+            width: 100%;
+            min-width: 500px;
+            height: 500px;
+        }
+
+        .text-top {
+            width: 50vw;
+            height: 185px;
+            padding: 10px;
+        }
+
+        .hovertextVis1 {
+            position: absolute;
+            text-align: center;
+            opacity: 0;
+            font-size: 67px;
+            pointer-events: none;
+            color: blue;
+        }
+
+        #map {
+            height: 89%;
+            width: 97%;
+            top: 40px;
+            left: 20px;
+        }
+
+        #mapSliderdiv,
+        #mapSliderdiv2 {
+            position: absolute;
+            text-align: center;
+            background-color: #262626;
+            border-radius: 10px;
+            z-index: 999;
+            left: 85%;
+            width: 140px;
+            height: 70px;
+            opacity: 0.85;
+            box-shadow: 2px 3px 2px rgba(18, 18, 18, 0.3);
+            border: 1px solid #ededed;
+            border-radius: 10px;
+        }
+
+        #mapSliderdiv {
+            top: 83%;
+        }
+
+        #mapSliderdiv2 {
+            top: 70%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">Dashboard for Brazilian E-Commerce Data by Olist</div>
+
+    <div class="column">
+        <div class="text-top" style="color: #F5F5F5; font-size: 17px;">
+            <br>
+            Brazil is the number 1 in e-commerce in the Latin American region.<br>
+            This dashboard aims to provide you with a fascinating insight into the world of brazilian<br> e-commerce.<br>
+            The data basis consists of over 100,000 orders between 2016 and 2018 from the well-known<br>
+            Brazilian e-commerce platform Olist.<br>
+            Explore the different visualizations to better understand the dynamics of multidimensional<br>
+            online purchasing behavior.
+        </div>
+        <div class="chart-container-violin">
+            <svg class="vis4" width="100%" height="100%"></svg>
+        </div>
+    </div>
+    <div class="column">
+        <div class="chart-container-1" id="vis1">
+            <svg class="vis1" width="100%" height="100%">
+            </svg>
+        </div>
+        <div class="chart-container-0">
+            <svg class="vis0" width="100%" height="100%">
+            </svg>
+        </div>
+    </div>
+    <div class="chart-container-fullsize">
+        <svg class="vis3" width="100%" height="100%"></svg>
+    </div>
+    <div class="chart-container-Map">
+        <text id="mapTitle"></text>
+        <div id="map"></div>
+        <div id="mapSliderdiv2">
+            <div id="sliderText2" style="color: #F5F5F5; padding: 5px;">Choose order frequency</div>
+            <input type="range" id='sliderMap2' min="0" max="70" value="0">
+        </div>
+        <div id="mapSliderdiv">
+            <div id="sliderText" style="color: #F5F5F5; padding: 5px;">Choose delivery time</div>
+            <input type="range" id='sliderMap' min="0" max="50" value="0">
+        </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="visualisierung_0.js"></script>
+    <script src="visualisierung_1.js"></script>
+    <script src="visualisierung_2.js"></script>
+    <script src="visualisierung_3.js"></script>
+    <script src="visualisierung_4.js"></script>
+
+</body>
+
+</html>
